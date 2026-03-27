@@ -1,0 +1,99 @@
+================================================================================
+Heavy table
+================================================================================
+{table
+{tr
+{th Header}
+{td Data}
+}
+}
+--------------------------------------------------------------------------------
+
+(document
+  (table_heavy
+    (table_row
+      (table_header_cell
+        (paragraph
+          (word)))
+      (table_data_cell
+        (paragraph
+          (word))))))
+
+================================================================================
+Light table
+================================================================================
+{t
+| A | B |
+| C | D |
+}
+--------------------------------------------------------------------------------
+
+(document
+  (table_light
+    (table_separator)
+    (table_light_cell)
+    (table_separator)
+    (table_light_cell)
+    (table_separator)
+    (table_separator)
+    (table_light_cell)
+    (table_separator)
+    (table_light_cell)
+    (table_separator)))
+
+================================================================================
+Heavy table with multiple rows
+================================================================================
+{table
+{tr
+{th H1}
+{th H2}
+}
+{tr
+{td D1}
+{td D2}
+}
+}
+--------------------------------------------------------------------------------
+
+(document
+  (table_heavy
+    (table_row
+      (table_header_cell
+        (paragraph
+          (word)))
+      (table_header_cell
+        (paragraph
+          (word))))
+    (table_row
+      (table_data_cell
+        (paragraph
+          (word)))
+      (table_data_cell
+        (paragraph
+          (word))))))
+
+================================================================================
+Heavy table with inline markup
+================================================================================
+{table
+{tr
+{th {b Bold Header}}
+{td text with [code]}
+}
+}
+--------------------------------------------------------------------------------
+
+(document
+  (table_heavy
+    (table_row
+      (table_header_cell
+        (paragraph
+          (bold
+            (word)
+            (word))))
+      (table_data_cell
+        (paragraph
+          (word)
+          (word)
+          (code_span))))))

@@ -1,0 +1,126 @@
+{0 odoc Example}
+
+This is an example odoc documentation page used for testing.
+
+{1 Basic Formatting}
+
+Text can be {b bold}, {i italic}, or {e emphasised}.
+You can also use {^ superscript} and {_ subscript}.
+
+Code spans look like [List.map] and escape sequences like \{ and \}.
+
+{1 Code Blocks}
+
+A simple code block:
+
+{[
+let x = 1 + 2
+let () = print_int x
+]}
+
+A code block with language tag:
+
+{@ocaml[
+let greet name =
+  Printf.printf "Hello, %s!\n" name
+]}
+
+{1 Verbatim}
+
+{v
+This is verbatim text.
+  Whitespace is preserved.
+    Exactly as written.
+v}
+
+{1 Math}
+
+Inline math: {m x^2 + y^2 = r^2}
+
+Block math:
+
+{math \sum_{i=0}^{n} i = \frac{n(n+1)}{2}}
+
+{1 References and Links}
+
+A reference: {!List.map}
+
+A reference with text: {{!List.map} the map function}
+
+A link: {:https://ocaml.org}
+
+A link with text: {{:https://ocaml.org} the OCaml website}
+
+{1 Lists}
+
+Heavy unordered list:
+
+{ul
+{- First item}
+{- Second item}
+{- Third item}
+}
+
+Heavy ordered list:
+
+{ol
+{- Step one}
+{- Step two}
+{li Step three}
+}
+
+Light list:
+
+- First item
+- Second item
++ Nested item
+
+{1 Headings}
+
+{2 Level Two}
+
+{3 Level Three}
+
+{3:my-anchor Heading with Anchor}
+
+{1 Tables}
+
+Heavy table:
+
+{table
+{tr
+  {th Header 1}
+  {th Header 2}
+}
+{tr
+  {td Cell 1}
+  {td Cell 2}
+}
+}
+
+{1 Tags}
+
+@author Jane Doe
+@since 1.0.0
+@version 2.0
+@deprecated
+@param x the input value
+@return the computed result
+@raise Not_found when the key is missing
+@see <https://ocaml.org> for more information
+
+{1 Raw Markup}
+
+{%<div class="custom">raw HTML</div>%}
+
+{1 Module List}
+
+{!modules: List Array String}
+
+{1 Paragraph Styles}
+
+{L Left-aligned text}
+
+{C Centered text}
+
+{R Right-aligned text}
