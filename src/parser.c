@@ -94,7 +94,7 @@ enum ts_symbol_identifiers {
   sym_see_doc = 72,
   sym__newline = 73,
   sym__blank_line = 74,
-  sym__code_block_content = 75,
+  sym_code_block_content = 75,
   sym__verbatim_content = 76,
   sym__inline_code_content = 77,
   sym__math_block_content = 78,
@@ -239,7 +239,7 @@ static const char * const ts_symbol_names[] = {
   [sym_see_doc] = "see_doc",
   [sym__newline] = "_newline",
   [sym__blank_line] = "_blank_line",
-  [sym__code_block_content] = "_code_block_content",
+  [sym_code_block_content] = "code_block_content",
   [sym__verbatim_content] = "_verbatim_content",
   [sym__inline_code_content] = "_inline_code_content",
   [sym__math_block_content] = "_math_block_content",
@@ -384,7 +384,7 @@ static const TSSymbol ts_symbol_map[] = {
   [sym_see_doc] = sym_see_doc,
   [sym__newline] = sym__newline,
   [sym__blank_line] = sym__blank_line,
-  [sym__code_block_content] = sym__code_block_content,
+  [sym_code_block_content] = sym_code_block_content,
   [sym__verbatim_content] = sym__verbatim_content,
   [sym__inline_code_content] = sym__inline_code_content,
   [sym__math_block_content] = sym__math_block_content,
@@ -754,8 +754,8 @@ static const TSSymbolMetadata ts_symbol_metadata[] = {
     .visible = false,
     .named = true,
   },
-  [sym__code_block_content] = {
-    .visible = false,
+  [sym_code_block_content] = {
+    .visible = true,
     .named = true,
   },
   [sym__verbatim_content] = {
@@ -2628,7 +2628,7 @@ static const uint16_t ts_parse_table[LARGE_STATE_COUNT][SYMBOL_COUNT] = {
     [sym_tag_hidden] = ACTIONS(1),
     [sym__newline] = ACTIONS(1),
     [sym__blank_line] = ACTIONS(1),
-    [sym__code_block_content] = ACTIONS(1),
+    [sym_code_block_content] = ACTIONS(1),
     [sym__verbatim_content] = ACTIONS(1),
     [sym__inline_code_content] = ACTIONS(1),
     [sym__math_block_content] = ACTIONS(1),
@@ -9976,7 +9976,7 @@ static const uint16_t ts_small_parse_table[] = {
     ACTIONS(984), 1,
       anon_sym_RBRACK_RBRACE,
     ACTIONS(986), 1,
-      sym__code_block_content,
+      sym_code_block_content,
   [6832] = 2,
     ACTIONS(988), 1,
       anon_sym_RBRACE,
@@ -10001,7 +10001,7 @@ static const uint16_t ts_small_parse_table[] = {
     ACTIONS(996), 1,
       anon_sym_RBRACK_RBRACE,
     ACTIONS(998), 1,
-      sym__code_block_content,
+      sym_code_block_content,
   [6867] = 2,
     ACTIONS(1000), 1,
       aux_sym_param_name_token1,
@@ -10016,7 +10016,7 @@ static const uint16_t ts_small_parse_table[] = {
     ACTIONS(1004), 1,
       anon_sym_RBRACK,
     ACTIONS(1006), 1,
-      sym__code_block_content,
+      sym_code_block_content,
   [6888] = 2,
     ACTIONS(968), 1,
       aux_sym_reference_target_token1,
@@ -10061,12 +10061,12 @@ static const uint16_t ts_small_parse_table[] = {
     ACTIONS(1032), 1,
       anon_sym_RBRACK_RBRACE,
     ACTIONS(1034), 1,
-      sym__code_block_content,
+      sym_code_block_content,
   [6951] = 2,
     ACTIONS(1036), 1,
       anon_sym_RBRACK,
     ACTIONS(1038), 1,
-      sym__code_block_content,
+      sym_code_block_content,
   [6958] = 2,
     ACTIONS(968), 1,
       aux_sym_reference_target_token1,
@@ -10921,7 +10921,7 @@ static const TSParseActionEntry ts_parse_actions[] = {
 };
 
 enum ts_external_scanner_symbol_identifiers {
-  ts_external_token__code_block_content = 0,
+  ts_external_token_code_block_content = 0,
   ts_external_token__verbatim_content = 1,
   ts_external_token__inline_code_content = 2,
   ts_external_token__math_block_content = 3,
@@ -10933,7 +10933,7 @@ enum ts_external_scanner_symbol_identifiers {
 };
 
 static const TSSymbol ts_external_scanner_symbol_map[EXTERNAL_TOKEN_COUNT] = {
-  [ts_external_token__code_block_content] = sym__code_block_content,
+  [ts_external_token_code_block_content] = sym_code_block_content,
   [ts_external_token__verbatim_content] = sym__verbatim_content,
   [ts_external_token__inline_code_content] = sym__inline_code_content,
   [ts_external_token__math_block_content] = sym__math_block_content,
@@ -10946,7 +10946,7 @@ static const TSSymbol ts_external_scanner_symbol_map[EXTERNAL_TOKEN_COUNT] = {
 
 static const bool ts_external_scanner_states[10][EXTERNAL_TOKEN_COUNT] = {
   [1] = {
-    [ts_external_token__code_block_content] = true,
+    [ts_external_token_code_block_content] = true,
     [ts_external_token__verbatim_content] = true,
     [ts_external_token__inline_code_content] = true,
     [ts_external_token__math_block_content] = true,
@@ -10975,7 +10975,7 @@ static const bool ts_external_scanner_states[10][EXTERNAL_TOKEN_COUNT] = {
     [ts_external_token__inline_code_content] = true,
   },
   [7] = {
-    [ts_external_token__code_block_content] = true,
+    [ts_external_token_code_block_content] = true,
   },
   [8] = {
     [ts_external_token__verbatim_content] = true,

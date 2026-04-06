@@ -6,7 +6,7 @@ module.exports = grammar({
   extras: () => [/[ \t]/],
 
   externals: ($) => [
-    $._code_block_content,
+    $.code_block_content,
     $._verbatim_content,
     $._inline_code_content,
     $._math_block_content,
@@ -167,7 +167,7 @@ module.exports = grammar({
     code_block: ($) =>
       seq(
         '{[',
-        optional($._code_block_content),
+        optional($.code_block_content),
         ']}',
       ),
 
@@ -179,7 +179,7 @@ module.exports = grammar({
           $.language,
           optional($.code_block_meta),
           '[',
-          optional($._code_block_content),
+          optional($.code_block_content),
           ']}',
         ),
         // With delimiter: {delim@lang[content]delim}
@@ -188,7 +188,7 @@ module.exports = grammar({
           $.language,
           optional($.code_block_meta),
           '[',
-          optional($._code_block_content),
+          optional($.code_block_content),
           ']',
           optional($.code_block_delimiter_close),
           '}',

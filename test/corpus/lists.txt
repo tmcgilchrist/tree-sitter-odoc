@@ -137,7 +137,8 @@ List item with code block
         (word)
         (word)
         (word))
-      (code_block))))
+      (code_block
+        (code_block_content)))))
 
 ================================================================================
 Empty list item
