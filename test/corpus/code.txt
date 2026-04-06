@@ -35,7 +35,8 @@ Simple code block
 --------------------------------------------------------------------------------
 
 (document
-  (code_block))
+  (code_block
+    (code_block_content)))
 
 ================================================================================
 Multi-line code block
@@ -47,7 +48,8 @@ let y = 2
 --------------------------------------------------------------------------------
 
 (document
-  (code_block))
+  (code_block
+    (code_block_content)))
 
 ================================================================================
 Code block with language
@@ -57,7 +59,8 @@ Code block with language
 
 (document
   (code_block_with_lang
-    (language)))
+    (language)
+    (code_block_content)))
 
 ================================================================================
 Code block with language and delimiter
@@ -69,6 +72,7 @@ Code block with language and delimiter
   (code_block_with_lang
     (code_block_open_delimiter)
     (language)
+    (code_block_content)
     (code_block_delimiter_close)))
 
 ================================================================================
@@ -99,4 +103,5 @@ Code block with language and metadata
 (document
   (code_block_with_lang
     (language)
-    (code_block_meta)))
+    (code_block_meta)
+    (code_block_content)))
