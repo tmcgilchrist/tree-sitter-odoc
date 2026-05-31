@@ -87,6 +87,9 @@ module.exports = grammar({
         $.link_with_text,
         $.minus,
         $.plus,
+        $.bar,
+        $.at,
+        $.backslash,
       ),
 
     // Word: anything not special. Follows the odoc lexer:
@@ -127,6 +130,16 @@ module.exports = grammar({
     // Standalone minus and plus (not followed by word chars)
     minus: () => '-',
     plus: () => '+',
+
+    // Standalone punctuation that is only structural in specific contexts:
+    // '|' separates cells inside {t ...} tables, '@' introduces tags, and
+    // '\' leads an escape sequence.  When they don't form one of those
+    // constructs odoc treats them as literal text (it emits `Bar, warns and
+    // recovers on unknown tags / stray backslashes), so we surface them as
+    // their own inline tokens rather than producing ERROR nodes.
+    bar: () => '|',
+    at: () => '@',
+    backslash: () => '\\',
 
     // ---------------------------------------------------------------
     // Style markup: {b ...}, {i ...}, {e ...}, {^ ...}, {_ ...}
@@ -416,6 +429,10 @@ module.exports = grammar({
         $.tag_open,
         $.tag_closed,
         $.tag_hidden,
+        $.tag_children_order,
+        $.tag_toc_status,
+        $.tag_order_category,
+        $.tag_short_title,
       ),
 
     tag_author: ($) => seq('@author', optional($._tag_text)),
@@ -437,6 +454,12 @@ module.exports = grammar({
     tag_open: () => '@open',
     tag_closed: () => '@closed',
     tag_hidden: () => '@hidden',
+    // Page/index tags (odoc >= 2.4).  Like @deprecated these are bare
+    // markers; their argument (e.g. the child order) follows as block content.
+    tag_children_order: () => '@children_order',
+    tag_toc_status: () => '@toc_status',
+    tag_order_category: () => '@order_category',
+    tag_short_title: () => '@short_title',
 
     param_name: () => /[^ \t\n\r]+/,
     raise_name: () => /[^ \t\n\r]+/,

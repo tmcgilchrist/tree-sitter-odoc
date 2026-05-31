@@ -171,6 +171,10 @@
 (tag_open) @attribute
 (tag_closed) @attribute
 (tag_hidden) @attribute
+(tag_children_order) @attribute
+(tag_toc_status) @attribute
+(tag_order_category) @attribute
+(tag_short_title) @attribute
 
 ; Escape sequences
 (escape_sequence) @string.escape

@@ -213,3 +213,32 @@ Multiple tags in sequence
   (paragraph
     (word)
     (word)))
+
+================================================================================
+Page and index tags
+================================================================================
+@children_order intro.mld api.mld
+@toc_status open
+@order_category basics
+@short_title My Page
+--------------------------------------------------------------------------------
+
+(document
+  (tag
+    (tag_children_order))
+  (paragraph
+    (word)
+    (word))
+  (tag
+    (tag_toc_status))
+  (paragraph
+    (word))
+  (tag
+    (tag_order_category))
+  (paragraph
+    (word))
+  (tag
+    (tag_short_title))
+  (paragraph
+    (word)
+    (word)))

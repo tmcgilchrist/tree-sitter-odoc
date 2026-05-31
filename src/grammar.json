@@ -245,6 +245,18 @@
         {
           "type": "SYMBOL",
           "name": "plus"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "bar"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "at"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "backslash"
         }
       ]
     },
@@ -355,6 +367,18 @@
     "plus": {
       "type": "STRING",
       "value": "+"
+    },
+    "bar": {
+      "type": "STRING",
+      "value": "|"
+    },
+    "at": {
+      "type": "STRING",
+      "value": "@"
+    },
+    "backslash": {
+      "type": "STRING",
+      "value": "\\"
     },
     "bold": {
       "type": "SEQ",
@@ -1354,6 +1378,22 @@
         {
           "type": "SYMBOL",
           "name": "tag_hidden"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tag_children_order"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tag_toc_status"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tag_order_category"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tag_short_title"
         }
       ]
     },
@@ -1589,6 +1629,22 @@
     "tag_hidden": {
       "type": "STRING",
       "value": "@hidden"
+    },
+    "tag_children_order": {
+      "type": "STRING",
+      "value": "@children_order"
+    },
+    "tag_toc_status": {
+      "type": "STRING",
+      "value": "@toc_status"
+    },
+    "tag_order_category": {
+      "type": "STRING",
+      "value": "@order_category"
+    },
+    "tag_short_title": {
+      "type": "STRING",
+      "value": "@short_title"
     },
     "param_name": {
       "type": "PATTERN",
