@@ -66,3 +66,18 @@ Unknown tag degrades to text
     (word)
     (word)
     (word)))
+
+================================================================================
+Unpaired right bracket is literal text
+================================================================================
+A stray ] bracket in prose.
+--------------------------------------------------------------------------------
+
+(document
+  (paragraph
+    (word)
+    (word)
+    (right_bracket)
+    (word)
+    (word)
+    (word)))

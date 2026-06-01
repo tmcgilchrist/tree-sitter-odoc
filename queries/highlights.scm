@@ -81,6 +81,13 @@
   "{{:" @punctuation.bracket
   "}" @punctuation.bracket)
 
+; Media ({image!...}, {video:...}, {audio!...} and replacement-text forms)
+(simple_media
+  "}" @punctuation.bracket)
+(media_with_text
+  "}" @punctuation.bracket)
+(media_target) @markup.link.url
+
 ; Lists (heavy)
 (unordered_list
   "{ul" @keyword

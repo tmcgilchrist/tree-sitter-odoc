@@ -85,11 +85,14 @@ module.exports = grammar({
         $.reference_with_text,
         $.simple_link,
         $.link_with_text,
+        $.simple_media,
+        $.media_with_text,
         $.minus,
         $.plus,
         $.bar,
         $.at,
         $.backslash,
+        $.right_bracket,
       ),
 
     // Word: anything not special. Follows the odoc lexer:
@@ -140,6 +143,8 @@ module.exports = grammar({
     bar: () => '|',
     at: () => '@',
     backslash: () => '\\',
+    // An unpaired ']' is literal text (odoc warns and emits it as a word).
+    right_bracket: () => ']',
 
     // ---------------------------------------------------------------
     // Style markup: {b ...}, {i ...}, {e ...}, {^ ...}, {_ ...}
@@ -186,11 +191,21 @@ module.exports = grammar({
 
     code_block_with_lang: ($) =>
       choice(
-        // Without delimiter: {@lang[content]}
+        // Without delimiter: {@lang[content]} or {@lang meta[content]}
         seq(
           '{@',
           $.language,
           optional($.code_block_meta),
+          '[',
+          optional($.code_block_content),
+          ']}',
+        ),
+        // No language tag: {@[content]} (odoc accepts this with a warning).
+        // A dedicated branch keeps it unambiguous with the language branch
+        // above (whose greedy code_block_meta would otherwise absorb the
+        // language when it is made optional).
+        seq(
+          '{@',
           '[',
           optional($.code_block_content),
           ']}',
@@ -281,6 +296,32 @@ module.exports = grammar({
 
     reference_target: () => /[^}]+/,
     link_target: () => /[^}]+/,
+
+    // ---------------------------------------------------------------
+    // Media: {image!ref}, {image:url}, {video!...}, {audio!...} and the
+    // replacement-text forms {{image!ref} caption}, etc.  The '!' variants
+    // take a reference target, the ':' variants a link/URL target.  These
+    // openers are matched ahead of {i (italic) and {v (verbatim) by maximal
+    // munch, so e.g. {video!...} no longer mis-parses as a verbatim block.
+    // ---------------------------------------------------------------
+
+    simple_media: ($) =>
+      seq(
+        choice('{image!', '{image:', '{video!', '{video:', '{audio!', '{audio:'),
+        $.media_target,
+        '}',
+      ),
+
+    media_with_text: ($) =>
+      seq(
+        choice('{{image!', '{{image:', '{{video!', '{{video:', '{{audio!', '{{audio:'),
+        $.media_target,
+        '}',
+        repeat($._inline),
+        '}',
+      ),
+
+    media_target: () => /[^}]+/,
 
     // ---------------------------------------------------------------
     // Lists (heavy syntax): {ul {- item} ...} and {ol {li item} ...}

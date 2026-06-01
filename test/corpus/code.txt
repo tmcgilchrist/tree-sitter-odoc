@@ -105,3 +105,13 @@ Code block with language and metadata
     (language)
     (code_block_meta)
     (code_block_content)))
+
+================================================================================
+Code block without a language tag
+================================================================================
+{@[let x = 1]}
+--------------------------------------------------------------------------------
+
+(document
+  (code_block_with_lang
+    (code_block_content)))
