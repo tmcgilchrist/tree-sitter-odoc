@@ -85,8 +85,14 @@ module.exports = grammar({
         $.reference_with_text,
         $.simple_link,
         $.link_with_text,
+        $.simple_media,
+        $.media_with_text,
         $.minus,
         $.plus,
+        $.bar,
+        $.at,
+        $.backslash,
+        $.right_bracket,
       ),
 
     // Word: anything not special. Follows the odoc lexer:
@@ -127,6 +133,18 @@ module.exports = grammar({
     // Standalone minus and plus (not followed by word chars)
     minus: () => '-',
     plus: () => '+',
+
+    // Standalone punctuation that is only structural in specific contexts:
+    // '|' separates cells inside {t ...} tables, '@' introduces tags, and
+    // '\' leads an escape sequence.  When they don't form one of those
+    // constructs odoc treats them as literal text (it emits `Bar, warns and
+    // recovers on unknown tags / stray backslashes), so we surface them as
+    // their own inline tokens rather than producing ERROR nodes.
+    bar: () => '|',
+    at: () => '@',
+    backslash: () => '\\',
+    // An unpaired ']' is literal text (odoc warns and emits it as a word).
+    right_bracket: () => ']',
 
     // ---------------------------------------------------------------
     // Style markup: {b ...}, {i ...}, {e ...}, {^ ...}, {_ ...}
@@ -173,11 +191,21 @@ module.exports = grammar({
 
     code_block_with_lang: ($) =>
       choice(
-        // Without delimiter: {@lang[content]}
+        // Without delimiter: {@lang[content]} or {@lang meta[content]}
         seq(
           '{@',
           $.language,
           optional($.code_block_meta),
+          '[',
+          optional($.code_block_content),
+          ']}',
+        ),
+        // No language tag: {@[content]} (odoc accepts this with a warning).
+        // A dedicated branch keeps it unambiguous with the language branch
+        // above (whose greedy code_block_meta would otherwise absorb the
+        // language when it is made optional).
+        seq(
+          '{@',
           '[',
           optional($.code_block_content),
           ']}',
@@ -268,6 +296,32 @@ module.exports = grammar({
 
     reference_target: () => /[^}]+/,
     link_target: () => /[^}]+/,
+
+    // ---------------------------------------------------------------
+    // Media: {image!ref}, {image:url}, {video!...}, {audio!...} and the
+    // replacement-text forms {{image!ref} caption}, etc.  The '!' variants
+    // take a reference target, the ':' variants a link/URL target.  These
+    // openers are matched ahead of {i (italic) and {v (verbatim) by maximal
+    // munch, so e.g. {video!...} no longer mis-parses as a verbatim block.
+    // ---------------------------------------------------------------
+
+    simple_media: ($) =>
+      seq(
+        choice('{image!', '{image:', '{video!', '{video:', '{audio!', '{audio:'),
+        $.media_target,
+        '}',
+      ),
+
+    media_with_text: ($) =>
+      seq(
+        choice('{{image!', '{{image:', '{{video!', '{{video:', '{{audio!', '{{audio:'),
+        $.media_target,
+        '}',
+        repeat($._inline),
+        '}',
+      ),
+
+    media_target: () => /[^}]+/,
 
     // ---------------------------------------------------------------
     // Lists (heavy syntax): {ul {- item} ...} and {ol {li item} ...}
@@ -416,6 +470,10 @@ module.exports = grammar({
         $.tag_open,
         $.tag_closed,
         $.tag_hidden,
+        $.tag_children_order,
+        $.tag_toc_status,
+        $.tag_order_category,
+        $.tag_short_title,
       ),
 
     tag_author: ($) => seq('@author', optional($._tag_text)),
@@ -437,6 +495,12 @@ module.exports = grammar({
     tag_open: () => '@open',
     tag_closed: () => '@closed',
     tag_hidden: () => '@hidden',
+    // Page/index tags (odoc >= 2.4).  Like @deprecated these are bare
+    // markers; their argument (e.g. the child order) follows as block content.
+    tag_children_order: () => '@children_order',
+    tag_toc_status: () => '@toc_status',
+    tag_order_category: () => '@order_category',
+    tag_short_title: () => '@short_title',
 
     param_name: () => /[^ \t\n\r]+/,
     raise_name: () => /[^ \t\n\r]+/,

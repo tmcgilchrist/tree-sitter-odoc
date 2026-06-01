@@ -81,6 +81,13 @@
   "{{:" @punctuation.bracket
   "}" @punctuation.bracket)
 
+; Media ({image!...}, {video:...}, {audio!...} and replacement-text forms)
+(simple_media
+  "}" @punctuation.bracket)
+(media_with_text
+  "}" @punctuation.bracket)
+(media_target) @markup.link.url
+
 ; Lists (heavy)
 (unordered_list
   "{ul" @keyword
@@ -171,6 +178,10 @@
 (tag_open) @attribute
 (tag_closed) @attribute
 (tag_hidden) @attribute
+(tag_children_order) @attribute
+(tag_toc_status) @attribute
+(tag_order_category) @attribute
+(tag_short_title) @attribute
 
 ; Escape sequences
 (escape_sequence) @string.escape
