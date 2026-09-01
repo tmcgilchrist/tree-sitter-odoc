@@ -126,3 +126,18 @@ see {!Foo} at {:https://example.com}
     (word)
     (simple_link
       (link_target))))
+
+================================================================================
+Paragraph style spanning a newline
+================================================================================
+{C centered text
+on two lines}
+--------------------------------------------------------------------------------
+
+(document
+  (paragraph_style
+    (word)
+    (word)
+    (word)
+    (word)
+    (word)))

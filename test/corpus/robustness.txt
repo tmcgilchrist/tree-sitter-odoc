@@ -81,3 +81,21 @@ A stray ] bracket in prose.
     (word)
     (word)
     (word)))
+
+================================================================================
+Unrecognised brace is literal text
+================================================================================
+A record type {x : int in prose.
+--------------------------------------------------------------------------------
+
+(document
+  (paragraph
+    (word)
+    (word)
+    (word)
+    (left_brace)
+    (word)
+    (word)
+    (word)
+    (word)
+    (word)))

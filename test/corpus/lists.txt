@@ -169,3 +169,93 @@ Ordered list with dash items
     (dash_list_item
       (paragraph
         (word)))))
+
+================================================================================
+Light list item continued on the next line
+================================================================================
+- a lock file (with extension [.opam.locked]) containing references to
+  exact versions
+- a set of opam files
+--------------------------------------------------------------------------------
+
+(document
+  (light_list
+    (light_list_item
+      (word)
+      (word)
+      (word)
+      (word)
+      (word)
+      (code_span)
+      (word)
+      (word)
+      (word)
+      (word)
+      (word)
+      (word))
+    (light_list_item
+      (word)
+      (word)
+      (word)
+      (word)
+      (word))))
+
+================================================================================
+Blank line ends a light list
+================================================================================
+- one
+
+- two
+--------------------------------------------------------------------------------
+
+(document
+  (light_list
+    (light_list_item
+      (word)))
+  (light_list
+    (light_list_item
+      (word))))
+
+================================================================================
+Light ordered list item continued on the next line
+================================================================================
++ first item that
+  continues onto the next line
++ second item
+--------------------------------------------------------------------------------
+
+(document
+  (light_list
+    (light_list_item
+      (word)
+      (word)
+      (word)
+      (word)
+      (word)
+      (word)
+      (word)
+      (word))
+    (light_list_item
+      (word)
+      (word))))
+
+================================================================================
+Light list item with markup and a code span
+================================================================================
+- see {!Foo.bar} and the [t] type
+  for the details
+--------------------------------------------------------------------------------
+
+(document
+  (light_list
+    (light_list_item
+      (word)
+      (simple_reference
+        (reference_target))
+      (word)
+      (word)
+      (code_span)
+      (word)
+      (word)
+      (word)
+      (word))))

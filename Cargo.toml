@@ -1,7 +1,7 @@
 [package]
 name = "tree-sitter-odoc"
 description = "Odoc grammar for tree-sitter"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Tim McGilchrist <timmcgil@gmail.com>"]
 keywords = ["incremental", "parsing", "odoc", "ocaml"]
 categories = ["parsing", "text-editors"]

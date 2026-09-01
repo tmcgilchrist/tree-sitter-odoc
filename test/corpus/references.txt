@@ -160,3 +160,83 @@ Audio media with replacement text
       (media_target)
       (word)
       (word))))
+
+================================================================================
+Reference with text spanning a newline
+================================================================================
+See {{!Foo.bar}the definition
+of bar} for details.
+--------------------------------------------------------------------------------
+
+(document
+  (paragraph
+    (word)
+    (reference_with_text
+      (reference_target)
+      (word)
+      (word)
+      (word)
+      (word))
+    (word)
+    (word)))
+
+================================================================================
+Link with text spanning a newline
+================================================================================
+Read the {{:https://ocaml.org}OCaml
+website}.
+--------------------------------------------------------------------------------
+
+(document
+  (paragraph
+    (word)
+    (word)
+    (link_with_text
+      (link_target)
+      (word)
+      (word))
+    (word)))
+
+================================================================================
+Module list spanning lines
+================================================================================
+{!modules: Foo Bar
+  Baz}
+--------------------------------------------------------------------------------
+
+(document
+  (module_list
+    (module_name)
+    (module_name)
+    (module_name)))
+
+================================================================================
+Media with replacement text spanning a newline
+================================================================================
+{{image!diagram.png} a caption
+that wraps}
+--------------------------------------------------------------------------------
+
+(document
+  (paragraph
+    (media_with_text
+      (media_target)
+      (word)
+      (word)
+      (word)
+      (word))))
+
+================================================================================
+Module list with a blank line
+================================================================================
+{!modules: Foo.Elf
+  Foo.Macho
+
+  Foo.Buffer}
+--------------------------------------------------------------------------------
+
+(document
+  (module_list
+    (module_name)
+    (module_name)
+    (module_name)))
