@@ -46,6 +46,14 @@
   "]" @punctuation.bracket
   "}" @punctuation.bracket) @markup.raw.block
 
+; A delimited code block may be followed by its results:
+; {delim@lang[code]delim[results]}.  The results are markup, not raw text, so
+; only the code and the delimiters are highlighted here.
+(code_block_with_lang
+  (code_block_open_delimiter) @punctuation.bracket
+  (code_block_content) @markup.raw.block
+  "]}" @punctuation.bracket)
+
 (language) @label
 (code_block_open_delimiter) @label
 (code_block_delimiter_close) @label

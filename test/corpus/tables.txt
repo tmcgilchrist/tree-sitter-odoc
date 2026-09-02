@@ -31,14 +31,18 @@ Light table
 (document
   (table_light
     (table_separator)
-    (table_light_cell)
+    (table_light_cell
+      (word))
     (table_separator)
-    (table_light_cell)
+    (table_light_cell
+      (word))
     (table_separator)
     (table_separator)
-    (table_light_cell)
+    (table_light_cell
+      (word))
     (table_separator)
-    (table_light_cell)
+    (table_light_cell
+      (word))
     (table_separator)))
 
 ================================================================================
@@ -97,3 +101,53 @@ Heavy table with inline markup
           (word)
           (word)
           (code_span))))))
+
+================================================================================
+Light table cell with markup
+================================================================================
+{t | {e emph} | and | [code] |
+   | a | b | c |}
+--------------------------------------------------------------------------------
+
+(document
+  (table_light
+    (table_separator)
+    (table_light_cell
+      (emphasis
+        (word)))
+    (table_separator)
+    (table_light_cell
+      (word))
+    (table_separator)
+    (table_light_cell
+      (code_span))
+    (table_separator)
+    (table_separator)
+    (table_light_cell
+      (word))
+    (table_separator)
+    (table_light_cell
+      (word))
+    (table_separator)
+    (table_light_cell
+      (word))
+    (table_separator)))
+
+================================================================================
+Light table cell with a reference
+================================================================================
+{t | {{!Foo.bar}the function} | plain |}
+--------------------------------------------------------------------------------
+
+(document
+  (table_light
+    (table_separator)
+    (table_light_cell
+      (reference_with_text
+        (reference_target)
+        (word)
+        (word)))
+    (table_separator)
+    (table_light_cell
+      (word))
+    (table_separator)))

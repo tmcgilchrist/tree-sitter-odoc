@@ -115,3 +115,124 @@ Code block without a language tag
 (document
   (code_block_with_lang
     (code_block_content)))
+
+================================================================================
+Delimited code block containing other code blocks
+================================================================================
+{example@text[
+Inline [code].
+
+{[
+let _ = "Block code"
+]}
+
+{foo@text[
+Code block with {[inner]}
+]foo}
+]example}
+--------------------------------------------------------------------------------
+
+(document
+  (code_block_with_lang
+    (code_block_open_delimiter)
+    (language)
+    (code_block_content)
+    (code_block_delimiter_close)))
+
+================================================================================
+Code block with a result block
+================================================================================
+{delim@ocaml version<5.3[
+  let f = 1 + "2"
+]delim[
+{err@mdx-error[
+Error: This expression has type string
+]err}]}
+--------------------------------------------------------------------------------
+
+(document
+  (code_block_with_lang
+    (code_block_open_delimiter)
+    (language)
+    (code_block_meta)
+    (code_block_content)
+    (code_block_delimiter_close)
+    (code_block_output
+      (code_block_with_lang
+        (code_block_open_delimiter)
+        (language)
+        (code_block_content)
+        (code_block_delimiter_close)))))
+
+================================================================================
+Undelimited code block keeps a mismatched terminator
+================================================================================
+{@ocaml[
+let x = 1
+]err}
+still code
+]}
+--------------------------------------------------------------------------------
+
+(document
+  (code_block_with_lang
+    (language)
+    (code_block_content)))
+
+================================================================================
+Plain code block after a delimited one
+================================================================================
+{foo@text[
+first
+]foo}
+
+{[
+second
+]}
+--------------------------------------------------------------------------------
+
+(document
+  (code_block_with_lang
+    (code_block_open_delimiter)
+    (language)
+    (code_block_content)
+    (code_block_delimiter_close))
+  (code_block
+    (code_block_content)))
+
+================================================================================
+Undelimited code block keeps a delimited terminator
+================================================================================
+{[
+let xs = [1]foo}
+]}
+--------------------------------------------------------------------------------
+
+(document
+  (code_block
+    (code_block_content)))
+
+================================================================================
+Result block holding markup rather than code
+================================================================================
+{delim@ocaml[
+let x = 1
+]delim[
+The toplevel prints {b 1}.
+]}
+--------------------------------------------------------------------------------
+
+(document
+  (code_block_with_lang
+    (code_block_open_delimiter)
+    (language)
+    (code_block_content)
+    (code_block_delimiter_close)
+    (code_block_output
+      (paragraph
+        (word)
+        (word)
+        (word)
+        (bold
+          (word))
+        (word)))))

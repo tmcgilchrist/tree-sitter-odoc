@@ -47,7 +47,13 @@ jobs:
           test-python: false
           test-go: true
           test-swift: false
-          node-version: '20'
+          # Node 20 bundles npm 10 / node-gyp 10, which does not recognise
+          # Visual Studio 2026 and so cannot build the node binding on the
+          # windows-2025-vs2026 runner.  Node 24 bundles npm 11.19 with
+          # node-gyp >= 12.1, which knows VS major version 18.  Node >= 22
+          # headers also require C++20, which needs tree-sitter >= 0.25.1 —
+          # 0.25.0's binding.gyp hardcodes C++17.
+          node-version: '24'
           abi-version: 14
 
   parse-examples:

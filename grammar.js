@@ -1,5 +1,20 @@
 /// <reference types="tree-sitter-cli/dsl" />
 
+/**
+ * Inline content of a brace-delimited construct.
+ *
+ * odoc's parser turns a newline inside delimited markup into a space, so
+ * `{b foo\nbar}` spans lines just fine, but a blank line is not allowed there
+ * (see `delimited_inline_element_list` in odoc's `syntax.ml`).  Hence
+ * `_inline_newline`, which the external scanner refuses to produce in front of
+ * a blank line: markup left unclosed while editing then stops at the end of
+ * its paragraph instead of swallowing the rest of the page.
+ *
+ * @param {GrammarSymbols<string>} $
+ * @returns {RuleBuilder<string>}
+ */
+const inline_content = ($) => repeat(choice($._inline, $._inline_newline));
+
 module.exports = grammar({
   name: 'odoc',
 
@@ -15,6 +30,13 @@ module.exports = grammar({
     $._tag_text,
     $._light_list_bullet_dash,
     $._light_list_bullet_plus,
+    // Every code block opener is external so that the scanner knows which
+    // delimiter, if any, the block was opened with and stops its content at
+    // the matching terminator rather than at the first ']}' in the code.
+    $.code_block_open_delimiter,
+    '{@',
+    '{[',
+    $._inline_newline,
   ],
 
   conflicts: () => [],
@@ -41,7 +63,6 @@ module.exports = grammar({
         $.table_heavy,
         $.table_light,
         $.module_list,
-        $.raw_markup,
         $.tag,
         $.paragraph_style,
       ),
@@ -52,8 +73,8 @@ module.exports = grammar({
 
     heading: ($) =>
       choice(
-        seq($.heading_marker_with_label, repeat($._inline), '}'),
-        seq($.heading_marker, repeat($._inline), '}'),
+        seq($.heading_marker_with_label, inline_content($), '}'),
+        seq($.heading_marker, inline_content($), '}'),
       ),
 
     // Combined tokens to prevent the word rule from consuming the colon
@@ -70,7 +91,11 @@ module.exports = grammar({
     // Inline elements
     // ---------------------------------------------------------------
 
-    _inline: ($) =>
+    // '|' separates cells in a light table, so the table rule below needs the
+    // inline elements without it.
+    _inline: ($) => choice($._inline_without_bar, $.bar),
+
+    _inline_without_bar: ($) =>
       choice(
         $.word,
         $.escape_sequence,
@@ -81,6 +106,7 @@ module.exports = grammar({
         $.superscript,
         $.subscript,
         $.math_span,
+        $.raw_markup,
         $.simple_reference,
         $.reference_with_text,
         $.simple_link,
@@ -89,10 +115,10 @@ module.exports = grammar({
         $.media_with_text,
         $.minus,
         $.plus,
-        $.bar,
         $.at,
         $.backslash,
         $.right_bracket,
+        $.left_brace,
       ),
 
     // Word: anything not special. Follows the odoc lexer:
@@ -145,16 +171,20 @@ module.exports = grammar({
     backslash: () => '\\',
     // An unpaired ']' is literal text (odoc warns and emits it as a word).
     right_bracket: () => ']',
+    // A '{' that opens none of the constructs below is literal text too: odoc
+    // warns and recovers rather than giving up on the rest of the page, and so
+    // should we — a half-typed '{' is a very common state in an editor.
+    left_brace: () => '{',
 
     // ---------------------------------------------------------------
     // Style markup: {b ...}, {i ...}, {e ...}, {^ ...}, {_ ...}
     // ---------------------------------------------------------------
 
-    bold: ($) => seq('{b', repeat($._inline), '}'),
-    italic: ($) => seq('{i', repeat($._inline), '}'),
-    emphasis: ($) => seq('{e', repeat($._inline), '}'),
-    superscript: ($) => seq('{^', repeat($._inline), '}'),
-    subscript: ($) => seq('{_', repeat($._inline), '}'),
+    bold: ($) => seq('{b', inline_content($), '}'),
+    italic: ($) => seq('{i', inline_content($), '}'),
+    emphasis: ($) => seq('{e', inline_content($), '}'),
+    superscript: ($) => seq('{^', inline_content($), '}'),
+    subscript: ($) => seq('{_', inline_content($), '}'),
 
     // ---------------------------------------------------------------
     // Paragraph style: {L ...}, {C ...}, {R ...}
@@ -163,7 +193,7 @@ module.exports = grammar({
     paragraph_style: ($) =>
       seq(
         choice('{L', '{C', '{R'),
-        repeat($._inline),
+        inline_content($),
         '}',
       ),
 
@@ -210,7 +240,10 @@ module.exports = grammar({
           optional($.code_block_content),
           ']}',
         ),
-        // With delimiter: {delim@lang[content]delim}
+        // With delimiter: {delim@lang[content]delim}, optionally followed by
+        // a result block: {delim@lang[content]delim[blocks]}.  Only delimited
+        // blocks may carry results, and the results always end with ']}'
+        // (odoc's `Right_code_delimiter`), whatever the delimiter is.
         seq(
           $.code_block_open_delimiter,
           $.language,
@@ -219,9 +252,18 @@ module.exports = grammar({
           optional($.code_block_content),
           ']',
           optional($.code_block_delimiter_close),
-          '}',
+          choice(
+            '}',
+            seq('[', optional($.code_block_output), ']}'),
+          ),
         ),
       ),
+
+    // Results of evaluating a code block, e.g. the toplevel output or the
+    // compiler error mdx writes back into the page.  Unlike the code itself
+    // this is odoc markup, not raw text.
+    code_block_output: ($) =>
+      repeat1(choice($._block, $._newline, $._blank_line)),
 
     // Combined token to avoid standalone '{' interfering with other {-prefixed tokens
     code_block_open_delimiter: () => token(seq('{', /[a-zA-Z0-9_]+/, '@')),
@@ -274,7 +316,7 @@ module.exports = grammar({
         '{{!',
         $.reference_target,
         '}',
-        repeat($._inline),
+        inline_content($),
         '}',
       ),
 
@@ -290,7 +332,7 @@ module.exports = grammar({
         '{{:',
         $.link_target,
         '}',
-        repeat($._inline),
+        inline_content($),
         '}',
       ),
 
@@ -317,7 +359,7 @@ module.exports = grammar({
         choice('{{image!', '{{image:', '{{video!', '{{video:', '{{audio!', '{{audio:'),
         $.media_target,
         '}',
-        repeat($._inline),
+        inline_content($),
         '}',
       ),
 
@@ -363,16 +405,18 @@ module.exports = grammar({
     // Uses external scanner to detect bullets at line start only.
     // ---------------------------------------------------------------
 
-    light_list: ($) =>
-      prec.right(seq(
-        $.light_list_item,
-        repeat(seq($._newline, $.light_list_item)),
-      )),
+    // Items carry the newline that separates them (see `light_list_item`),
+    // so the list is just a run of adjacent items.  A blank line is not part
+    // of an item, so it ends the list, as it does in odoc.
+    light_list: ($) => prec.right(repeat1($.light_list_item)),
 
+    // An item runs until the next bullet of the same kind, a blank line or a
+    // closing brace: its content is a paragraph, so it spans single newlines
+    // (odoc's [shorthand_list_items]).
     light_list_item: ($) =>
       prec.right(seq(
         choice($._light_list_bullet_dash, $._light_list_bullet_plus),
-        repeat($._inline),
+        inline_content($),
       )),
 
     // ---------------------------------------------------------------
@@ -411,7 +455,9 @@ module.exports = grammar({
     // Tables (light): {t ...}
     // ---------------------------------------------------------------
 
-    // Light table: just capture content as cells separated by pipes
+    // Light table: cells separated by pipes, rows by newlines.  A cell holds
+    // inline elements — odoc allows markup such as {e ...} inside one — but no
+    // newline, so a cell never spans rows.
     table_light: ($) =>
       seq(
         '{t',
@@ -420,7 +466,7 @@ module.exports = grammar({
       ),
 
     table_separator: () => '|',
-    table_light_cell: () => /[^|}\n\r]+/,
+    table_light_cell: ($) => prec.right(repeat1($._inline_without_bar)),
 
     // ---------------------------------------------------------------
     // Module list: {!modules: A B C}
@@ -429,7 +475,9 @@ module.exports = grammar({
     module_list: ($) =>
       seq(
         '{!modules:',
-        repeat($.module_name),
+        // odoc lexes everything up to the '}' as the module list, blank lines
+        // included, so this is not `inline_content`.
+        repeat(choice($.module_name, $._newline, $._blank_line)),
         '}',
       ),
 

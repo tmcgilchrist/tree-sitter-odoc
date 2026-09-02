@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-odoc",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Tree-sitter grammar for the odoc documentation markup language",
   "main": "bindings/node",
   "types": "bindings/node",
@@ -29,7 +29,7 @@
     "eslint": "^9.15.0",
     "eslint-config-treesitter": "^1.0.2",
     "prebuildify": "^6.0.1",
-    "tree-sitter": "^0.25.0",
+    "tree-sitter": "^0.25.1",
     "tree-sitter-cli": "^0.25.0"
   },
   "peerDependencies": {

@@ -13,12 +13,30 @@ enum TokenType {
   TAG_TEXT,
   LIGHT_LIST_BULLET_DASH,
   LIGHT_LIST_BULLET_PLUS,
+  CODE_BLOCK_OPEN_DELIMITER,
+  CODE_BLOCK_OPEN,
+  CODE_BLOCK_OPEN_BRACKET,
+  INLINE_NEWLINE,
 };
 
-// Scanner state: track whether we're at line start for light list detection
+// odoc's delim_char: ['a'-'z' 'A'-'Z' '0'-'9' '_'].  odoc puts no bound on the
+// length of a delimiter; anything longer than this is treated as a mismatch,
+// which degrades to "the block runs to the end of the file" rather than to a
+// wrong parse.
+#define MAX_DELIMITER_LENGTH 32
+
+// Scanner state: the delimiter of the code block currently being scanned, so
+// that {delim@lang[ ... ]delim} only ends at its own terminator and not at the
+// first ']}' that happens to appear in the code.
 typedef struct {
-  bool at_line_start;
+  uint8_t delimiter_length;
+  char delimiter[MAX_DELIMITER_LENGTH];
 } Scanner;
+
+static bool is_delimiter_char(int32_t c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+         (c >= '0' && c <= '9') || c == '_';
+}
 
 static void advance(TSLexer *lexer) { lexer->advance(lexer, false); }
 
@@ -30,8 +48,59 @@ static bool eof(TSLexer *lexer) { return lexer->eof(lexer); }
 
 static int32_t lookahead(TSLexer *lexer) { return lexer->lookahead; }
 
-// Scan code block content: everything until ']<delim>}' where delim matches
-static bool scan_code_block_content(TSLexer *lexer) {
+// Scan a code block opener: '{[', '{@' or '{' delim_char* '@'.  The delimiter
+// is kept in the scanner state for scan_code_block_content below.
+static bool scan_code_block_open(Scanner *scanner, TSLexer *lexer,
+                                 const bool *valid_symbols) {
+  if (lookahead(lexer) != '{') {
+    return false;
+  }
+  advance(lexer);
+
+  if (lookahead(lexer) == '[') {
+    if (!valid_symbols[CODE_BLOCK_OPEN_BRACKET]) {
+      return false;
+    }
+    advance(lexer);
+    mark_end(lexer);
+    scanner->delimiter_length = 0;
+    lexer->result_symbol = CODE_BLOCK_OPEN_BRACKET;
+    return true;
+  }
+
+  char delimiter[MAX_DELIMITER_LENGTH];
+  unsigned length = 0;
+  while (is_delimiter_char(lookahead(lexer))) {
+    if (length < MAX_DELIMITER_LENGTH) {
+      delimiter[length] = (char)lookahead(lexer);
+    }
+    length++;
+    advance(lexer);
+  }
+
+  if (lookahead(lexer) != '@' || length > MAX_DELIMITER_LENGTH) {
+    return false;
+  }
+
+  if (length > 0 ? !valid_symbols[CODE_BLOCK_OPEN_DELIMITER]
+                 : !valid_symbols[CODE_BLOCK_OPEN]) {
+    return false;
+  }
+
+  advance(lexer);
+  mark_end(lexer);
+  memcpy(scanner->delimiter, delimiter, length);
+  scanner->delimiter_length = (uint8_t)length;
+  lexer->result_symbol =
+      length > 0 ? CODE_BLOCK_OPEN_DELIMITER : CODE_BLOCK_OPEN;
+  return true;
+}
+
+// Scan code block content: everything until the terminator matching the
+// delimiter the opener recorded — ']<delim>}', or ']<delim>[' for the result
+// block a delimited code block may carry.  odoc's lexer treats a terminator
+// with any other delimiter as part of the code.
+static bool scan_code_block_content(Scanner *scanner, TSLexer *lexer) {
   bool has_content = false;
 
   while (!eof(lexer)) {
@@ -39,23 +108,20 @@ static bool scan_code_block_content(TSLexer *lexer) {
       mark_end(lexer);
       advance(lexer);
 
-      // Check for '}' (end of basic code block: ]})
-      if (lookahead(lexer) == '}') {
-        lexer->result_symbol = CODE_BLOCK_CONTENT;
-        return has_content;
-      }
-
-      // Check for delimiter chars followed by } or [
-      int buf_len = 0;
-      while ((lookahead(lexer) >= 'a' && lookahead(lexer) <= 'z') ||
-             (lookahead(lexer) >= 'A' && lookahead(lexer) <= 'Z') ||
-             (lookahead(lexer) >= '0' && lookahead(lexer) <= '9') ||
-             lookahead(lexer) == '_') {
-        buf_len++;
+      unsigned length = 0;
+      bool matches = true;
+      while (is_delimiter_char(lookahead(lexer))) {
+        if (length >= scanner->delimiter_length ||
+            (char)lookahead(lexer) != scanner->delimiter[length]) {
+          matches = false;
+        }
+        length++;
         advance(lexer);
       }
 
-      if (buf_len > 0 && (lookahead(lexer) == '}' || lookahead(lexer) == '[')) {
+      if (matches && length == scanner->delimiter_length &&
+          (lookahead(lexer) == '}' ||
+           (lookahead(lexer) == '[' && scanner->delimiter_length > 0))) {
         lexer->result_symbol = CODE_BLOCK_CONTENT;
         return has_content;
       }
@@ -304,23 +370,37 @@ static bool scan_tag_text(TSLexer *lexer) {
   return false;
 }
 
-// Scan light list bullet: '-' or '+' at column 0 (start of line)
-// tree-sitter provides get_column via the lexer
-static bool scan_light_list_bullet(TSLexer *lexer,
-                                    const bool *valid_symbols) {
-  // Use get_column to check if we're at the start of a line
-  // (after skipping horizontal whitespace which is in extras)
-  uint32_t col = lexer->get_column(lexer);
-
-  if (col == 0) {
-    // Skip leading horizontal whitespace
-    while (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
-      skip(lexer);
-    }
+// Scan the newline that lets brace-delimited markup span lines.  A newline
+// that starts a blank line is not one: odoc rejects a blank line inside such
+// markup, and stopping here keeps unclosed markup from swallowing the page.
+static bool scan_inline_newline(TSLexer *lexer) {
+  if (lookahead(lexer) != '\n' && lookahead(lexer) != '\r') {
+    return false;
   }
 
-  // Only consider this a list bullet if we're at column 0
-  // (or after only whitespace that was already skipped by extras)
+  if (lookahead(lexer) == '\r') {
+    advance(lexer);
+  }
+  if (lookahead(lexer) == '\n') {
+    advance(lexer);
+  }
+  mark_end(lexer);
+
+  while (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+    advance(lexer);
+  }
+  if (eof(lexer) || lookahead(lexer) == '\n' || lookahead(lexer) == '\r') {
+    return false;
+  }
+
+  lexer->result_symbol = INLINE_NEWLINE;
+  return true;
+}
+
+// Scan light list bullet: '-' or '+' introducing an item.  The caller has
+// already established that only whitespace precedes it on the line.
+static bool scan_light_list_bullet(TSLexer *lexer,
+                                    const bool *valid_symbols) {
   if (lookahead(lexer) == '-' && valid_symbols[LIGHT_LIST_BULLET_DASH]) {
     advance(lexer);
     mark_end(lexer);
@@ -347,11 +427,7 @@ static bool scan_light_list_bullet(TSLexer *lexer,
 // External scanner API
 
 void *tree_sitter_odoc_external_scanner_create(void) {
-  Scanner *scanner = calloc(1, sizeof(Scanner));
-  if (scanner) {
-    scanner->at_line_start = true;
-  }
-  return scanner;
+  return calloc(1, sizeof(Scanner));
 }
 
 void tree_sitter_odoc_external_scanner_destroy(void *payload) {
@@ -360,28 +436,32 @@ void tree_sitter_odoc_external_scanner_destroy(void *payload) {
 
 unsigned tree_sitter_odoc_external_scanner_serialize(void *payload,
                                                      char *buffer) {
-  (void)payload;
-  (void)buffer;
-  return 0;
+  Scanner *scanner = (Scanner *)payload;
+  buffer[0] = (char)scanner->delimiter_length;
+  memcpy(buffer + 1, scanner->delimiter, scanner->delimiter_length);
+  return 1 + scanner->delimiter_length;
 }
 
 void tree_sitter_odoc_external_scanner_deserialize(void *payload,
                                                     const char *buffer,
                                                     unsigned length) {
-  (void)payload;
-  (void)buffer;
-  (void)length;
+  Scanner *scanner = (Scanner *)payload;
+  scanner->delimiter_length = 0;
+  if (length > 0) {
+    scanner->delimiter_length = (uint8_t)buffer[0];
+    memcpy(scanner->delimiter, buffer + 1, scanner->delimiter_length);
+  }
 }
 
 bool tree_sitter_odoc_external_scanner_scan(void *payload, TSLexer *lexer,
                                              const bool *valid_symbols) {
-  (void)payload;
+  Scanner *scanner = (Scanner *)payload;
 
   // If all externals are valid, we're in error recovery — bail out.
   // This prevents the scanner from greedily consuming content when
   // the parser hasn't committed to a specific construct yet.
   bool all_valid = true;
-  for (int i = CODE_BLOCK_CONTENT; i <= LIGHT_LIST_BULLET_PLUS; i++) {
+  for (int i = CODE_BLOCK_CONTENT; i <= INLINE_NEWLINE; i++) {
     if (!valid_symbols[i]) {
       all_valid = false;
       break;
@@ -394,7 +474,7 @@ bool tree_sitter_odoc_external_scanner_scan(void *payload, TSLexer *lexer,
   // consumed and the parser expects content tokens).
 
   if (valid_symbols[CODE_BLOCK_CONTENT] && !valid_symbols[INLINE_CODE_CONTENT]) {
-    return scan_code_block_content(lexer);
+    return scan_code_block_content(scanner, lexer);
   }
 
   if (valid_symbols[VERBATIM_CONTENT]) {
@@ -421,9 +501,36 @@ bool tree_sitter_odoc_external_scanner_scan(void *payload, TSLexer *lexer,
     return scan_tag_text(lexer);
   }
 
-  if (valid_symbols[LIGHT_LIST_BULLET_DASH] ||
+  if (valid_symbols[INLINE_NEWLINE] &&
+      (lookahead(lexer) == '\n' || lookahead(lexer) == '\r')) {
+    return scan_inline_newline(lexer);
+  }
+
+  // A code block opener and a light list bullet both start a block, so they
+  // can be valid in the same state.  Extras are skipped by the internal lexer,
+  // which does not run before this scanner, so the indentation in front of
+  // either is ours to skip — but only a bullet that is the first thing on its
+  // line starts a list ('a - b' is a paragraph, not a list).
+  bool code_block_open_valid = valid_symbols[CODE_BLOCK_OPEN_DELIMITER] ||
+                               valid_symbols[CODE_BLOCK_OPEN] ||
+                               valid_symbols[CODE_BLOCK_OPEN_BRACKET];
+
+  if (code_block_open_valid || valid_symbols[LIGHT_LIST_BULLET_DASH] ||
       valid_symbols[LIGHT_LIST_BULLET_PLUS]) {
-    return scan_light_list_bullet(lexer, valid_symbols);
+    bool at_line_start = lexer->get_column(lexer) == 0;
+
+    while (lookahead(lexer) == ' ' || lookahead(lexer) == '\t') {
+      skip(lexer);
+    }
+
+    if (lookahead(lexer) == '{' && code_block_open_valid) {
+      return scan_code_block_open(scanner, lexer, valid_symbols);
+    }
+
+    if (at_line_start && (valid_symbols[LIGHT_LIST_BULLET_DASH] ||
+                          valid_symbols[LIGHT_LIST_BULLET_PLUS])) {
+      return scan_light_list_bullet(lexer, valid_symbols);
+    }
   }
 
   return false;
