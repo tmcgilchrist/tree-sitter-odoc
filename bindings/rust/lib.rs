@@ -32,12 +32,11 @@ pub const LANGUAGE: LanguageFn = unsafe { LanguageFn::from_raw(tree_sitter_odoc)
 /// [`node-types.json`]: https://tree-sitter.github.io/tree-sitter/using-parsers/6-static-node-types
 pub const NODE_TYPES: &str = include_str!("../../src/node-types.json");
 
-// NOTE: uncomment these to include any queries that this grammar contains:
+/// The syntax highlighting query for this grammar.
+pub const HIGHLIGHTS_QUERY: &str = include_str!("../../queries/highlights.scm");
 
-// pub const HIGHLIGHTS_QUERY: &str = include_str!("../../queries/highlights.scm");
-// pub const INJECTIONS_QUERY: &str = include_str!("../../queries/injections.scm");
-// pub const LOCALS_QUERY: &str = include_str!("../../queries/locals.scm");
-// pub const TAGS_QUERY: &str = include_str!("../../queries/tags.scm");
+/// The language injection query for this grammar.
+pub const INJECTIONS_QUERY: &str = include_str!("../../queries/injections.scm");
 
 #[cfg(test)]
 mod tests {
@@ -47,5 +46,35 @@ mod tests {
         parser
             .set_language(&super::LANGUAGE.into())
             .expect("Error loading Odoc parser");
+    }
+
+    // Editors load the queries through these constants, so a query that
+    // names a node or field the grammar no longer has must fail here.
+    #[test]
+    fn test_highlights_query_is_valid() {
+        tree_sitter::Query::new(&super::LANGUAGE.into(), super::HIGHLIGHTS_QUERY)
+            .expect("Invalid highlights query");
+    }
+
+    #[test]
+    fn test_injections_query_is_valid() {
+        tree_sitter::Query::new(&super::LANGUAGE.into(), super::INJECTIONS_QUERY)
+            .expect("Invalid injections query");
+    }
+
+    #[test]
+    fn test_node_types_matches_grammar() {
+        let language: tree_sitter::Language = super::LANGUAGE.into();
+        for kind in ["document", "paragraph", "code_block"] {
+            assert!(
+                super::NODE_TYPES.contains(&format!("\"type\": \"{kind}\"")),
+                "node-types.json has no {kind} node"
+            );
+            assert_ne!(
+                language.id_for_node_kind(kind, true),
+                0,
+                "grammar has no {kind} node"
+            );
+        }
     }
 }

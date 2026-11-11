@@ -1,5 +1,7 @@
 # tree-sitter-odoc
 
+[![crates.io](https://img.shields.io/crates/v/tree-sitter-odoc.svg)](https://crates.io/crates/tree-sitter-odoc)
+
 Tree-sitter grammar for [odoc](https://ocaml.github.io/odoc/), the OCaml documentation markup language.
 
 ## Overview
@@ -56,7 +58,9 @@ This grammar provides syntax highlighting and parsing support for odoc markup, u
 
 ## Installation
 
-Nothing published to package repositories just yet, it's still in development.
+### Cargo
+
+The crate is published on [crates.io](https://crates.io/crates/tree-sitter-odoc).
 
 ### From source
 
